@@ -20,7 +20,7 @@ def detection_loop_screen():
             stream=True,
             imgsz=max(monitor["width"], monitor["height"]),
             conf=0.5,
-            device="0"  # cuda:0 / mps / cpu
+            device="mps"  # cuda:0 / mps / cpu
         )
 
         for r in results:

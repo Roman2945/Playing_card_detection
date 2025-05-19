@@ -5,10 +5,17 @@ import threading
 
 import detect_webcam
 
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    threading.Thread(target=detect_webcam.detection_loop, daemon=True).start()
+    # Запускаємо детекцію у фон-потоці БЕЗ GUI
+    threading.Thread(
+        target=detect_webcam.detection_loop,
+        kwargs={"show_window": False},   # ключова зміна
+        daemon=True
+    ).start()
     yield
+
 
 app = FastAPI(lifespan=lifespan)
 
@@ -20,7 +27,6 @@ def get_detected():
     total = 0
     for c in cards:
         value = c[:-1] if len(c) > 1 else c
-
         if value == "A":
             total += 1
         elif value in ("J", "Q", "K"):
@@ -30,7 +36,6 @@ def get_detected():
                 total += int(value)
             except ValueError:
                 pass
-
     return {"cards": cards, "sum": total}
 
 @app.post("/reset")
@@ -39,6 +44,7 @@ def reset():
         detect_webcam.detected_cards.clear()
         detect_webcam.frame_counters.clear()
     return JSONResponse({"message": "reset complete"})
+
 
 if __name__ == "__main__":
     import uvicorn
