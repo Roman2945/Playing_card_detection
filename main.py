@@ -1,9 +1,12 @@
-from fastapi import FastAPI, Response
-from fastapi.responses import JSONResponse, StreamingResponse, HTMLResponse
+import asyncio
+import threading
 from contextlib import asynccontextmanager
-import asyncio, threading
+
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse, StreamingResponse, HTMLResponse
 
 import detect_webcam
+
 
 # ──────────── запуск детектора ────────────
 @asynccontextmanager
@@ -14,7 +17,10 @@ async def lifespan(_app: FastAPI):
         daemon=True
     ).start()
     yield
+
+
 app = FastAPI(lifespan=lifespan)
+
 
 # ───────────── MJPEG стрім ────────────────
 async def mjpeg_generator():
@@ -25,7 +31,8 @@ async def mjpeg_generator():
             yield (boundary +
                    b"Content-Type: image/jpeg\r\n\r\n" +
                    frame + b"\r\n")
-        await asyncio.sleep(0.04)   # ~25 fps
+        await asyncio.sleep(0.04)  # ~25 fps
+
 
 @app.get("/video")
 def video_feed():
@@ -33,6 +40,7 @@ def video_feed():
         mjpeg_generator(),
         media_type="multipart/x-mixed-replace; boundary=frame"
     )
+
 
 # ───────────── API карт та ресет ───────────
 @app.get("/detected")
@@ -46,7 +54,7 @@ def get_detected():
         if v == "A":
             total += 1
         elif v in ("J", "Q", "K"):
-            total += {"J":11, "Q":12, "K":13}[v]
+            total += {"J": 11, "Q": 12, "K": 13}[v]
         else:
             try:
                 total += int(v)
@@ -54,12 +62,14 @@ def get_detected():
                 pass
     return {"cards": cards, "sum": total}
 
+
 @app.post("/reset")
 def reset():
     with detect_webcam.lock:
         detect_webcam.detected_cards.clear()
         detect_webcam.frame_counters.clear()
     return JSONResponse({"message": "reset complete"})
+
 
 # ────────── найпростіший фронт ─────────────
 @app.get("/", response_class=HTMLResponse)
@@ -95,6 +105,8 @@ poll();
 </body></html>
 """
 
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
