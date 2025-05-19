@@ -19,15 +19,16 @@ def get_detected():
 
     total = 0
     for c in cards:
-        if c == "A":
+        value = c[:-1] if len(c) > 1 else c
+
+        if value == "A":
             total += 1
-        elif c in ("J", "Q", "K"):
-            total += {"J": 11, "Q": 12, "K": 13}[c]
+        elif value in ("J", "Q", "K"):
+            total += {"J": 11, "Q": 12, "K": 13}[value]
         else:
             try:
-                total += int(c)
+                total += int(value)
             except ValueError:
-                # ignore any non-numeric names
                 pass
 
     return {"cards": cards, "sum": total}
