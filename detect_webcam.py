@@ -6,7 +6,7 @@ import platform
 
 MODEL_PATH   = "best100.pt"
 VIDEO_SOURCE = 0
-THRESHOLD    = 15
+THRESHOLD    = 10
 
 detected_cards = set()
 frame_counters = {}
@@ -14,6 +14,7 @@ lock = threading.Lock()
 
 # нова спільна змінна для стриму
 latest_jpeg = None
+
 
 def detection_loop(*, show_window: bool = False):
     print("⏳ Завантажую модель...")
@@ -45,9 +46,9 @@ def detection_loop(*, show_window: bool = False):
                 name   = model.names[cls_id]
                 current.add(name)
                 x1, y1, x2, y2 = map(int, box.xyxy[0])
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (0,0,255), 2)
+                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
                 cv2.putText(frame, name, (x1, y1-10),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.8, (224,94,34), 2)
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.8, (224, 94, 34), 2)
 
         # ── оновлюємо спільний стан ─────────────────────────────
         with lock:
@@ -77,6 +78,7 @@ def detection_loop(*, show_window: bool = False):
     cap.release()
     if show_window and main_thread:
         cv2.destroyAllWindows()
+
 
 def get_latest_frame() -> bytes | None:
     with lock:
